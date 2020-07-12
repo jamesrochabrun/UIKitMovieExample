@@ -12,7 +12,9 @@ final class GenericDataSource<RowContent, Element>: NSObject, UITableViewDataSou
     
     private var models: [Element]
     private let configureCell: CellConfiguration
+   // typealias CellConfiguration = (UITableView, Element, IndexPath) -> RowContent
     typealias CellConfiguration = (RowContent, Element) -> RowContent
+
     
     private var searchResults: [Element] = []
     private var isSearchActive: Bool = false

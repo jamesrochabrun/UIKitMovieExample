@@ -7,13 +7,16 @@
 
 import UIKit
 
+
 final class FilteredList<Element, FilterKey, RowContent>: UIView
     where Element: Searchable, RowContent: GenericCell<Element> {
     
+    // typealias RowContentProvider = (UITableView, Element, IndexPath) -> RowContent
+    typealias RowContentProvider = (RowContent, Element) -> RowContent
+
     let tableView: UITableView = {
         let tableView = UITableView()
         tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.register(RowContent.self)
         tableView.backgroundColor = nil
         tableView.backgroundView = nil
         tableView.separatorStyle = .none
@@ -24,15 +27,16 @@ final class FilteredList<Element, FilterKey, RowContent>: UIView
     
     private var filterKey: KeyPath<Element, FilterKey>?
     private var isIncluded: ((FilterKey) -> Bool)?
-    private var rowContent: ((UITableView, Element) -> RowContent)?
+    private var rowContent: RowContentProvider?
     
-    convenience init(
+    convenience init<T: UITableViewCell>(_ type: T.Type,
         _ items: [Element],
         filterBy key: KeyPath<Element, FilterKey>,
         isIncluded: @escaping (FilterKey) -> Bool,
-        rowContent: @escaping (UITableView, Element) -> RowContent
+        rowContent: @escaping RowContentProvider
     ) {
         self.init(frame: .zero)
+        self.tableView.register(type)
         self.filterKey = key
         self.isIncluded = isIncluded
         self.rowContent = rowContent
@@ -60,7 +64,7 @@ final class FilteredList<Element, FilterKey, RowContent>: UIView
     }
     
     private func setupDataSource(_ items: [Element],
-                                 rowContent: @escaping (UITableView, Element) -> RowContent) {
+                                 rowContent: @escaping RowContentProvider) {
         
         dataSource = GenericDataSource(models: items, configureCell: rowContent)
         tableView.dataSource = dataSource

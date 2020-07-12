@@ -6,58 +6,80 @@
 //
 
 import UIKit
+import Combine
+import SwiftUI
 
 class ViewController: UIViewController {
+    
+    @ObservedObject private var client = MovieModel()
+    
+    lazy var filteredList: FilteredList<Movie, String, MovieCell>! = nil
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+    
+//        client.getFeed(from: .nowPlaying) { result in
+//            switch result {
+//            case .success(let movieFeedResult):
+//                guard let movieResults = movieFeedResult?.results else { return }
+//
+//                self.filteredList = FilteredList(movieResults,
+//                                                 filterBy: \.title,
+//                                                 isIncluded: { query in
+//                                                    return true
+//                                                 },
+//                                                 rowContent: { movieCell, movie in
+//                                                    movieCell.item = movie
+//                                                    return movieCell
+//                                                 })
+//
+//
+//
+//                self.view.addSubview(self.filteredList)
+//                self.filteredList.translatesAutoresizingMaskIntoConstraints = false
+//
+//                self.filteredList.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
+//                self.filteredList.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
+//                self.filteredList.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
+//                self.filteredList.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
+//
+//
+//               // dump(movieResults)
+//            case .failure(let error):
+//                print("the error \(error)")
+//            }
+//        }
+
         
-        let filterList = FilteredList([Movie(id: 0, title: "Rocky")],
-                                      filterBy: \.query) { p in true }
-            rowContent: { row, element in
-                row.item = element
-                return row
-            }
-        view.addSubview(filterList)
-        filterList.translatesAutoresizingMaskIntoConstraints = false
+        // print("movies \($client.movies)")
+        
 
-        filterList.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-        filterList.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        filterList.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        filterList.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        
+        let filteredList = FilteredList(MovieCell.self,
+                                        [Movie.emptyMovie],
+                             filterBy: \.title,
+                             isIncluded: { query in
+                                return true
+                             },
+                             rowContent: { cell, movie in
+//                                let movieCell: MovieCell = tableView.dequeueReusableCell(forIndexPath: indexPath)
+                                cell.item = movie
+                                return cell
+                             })
+    
+        arrangeFilteredList(filteredList)
+    }
+    
+    func arrangeFilteredList(_ filteredList: FilteredList<Movie, String, GenericCell<Movie>>) {
+        view.addSubview(filteredList)
+        filteredList.translatesAutoresizingMaskIntoConstraints = false
+        
+        filteredList.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
+        filteredList.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
+        filteredList.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
+        filteredList.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
     }
 }
 
-struct Movie: Searchable {
-    var id: Int
-    let title: String
-}
 
-extension Movie {
-    
-    var query: String {
-        title
-    }
-}
-
-final class MovieCell: GenericCell<Movie> {
-    
-    let label: UILabel = {
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    override func setupSubViews() {
-        contentView.addSubview(label)
-        label.topAnchor.constraint(equalTo: contentView.topAnchor).isActive = true
-        label.leadingAnchor.constraint(equalTo: contentView.leadingAnchor).isActive = true
-        label.trailingAnchor.constraint(equalTo: contentView.trailingAnchor).isActive = true
-        label.bottomAnchor.constraint(equalTo: contentView.bottomAnchor).isActive = true
-    }
-    
-    override func setupWithItem(_ item: Movie) {
-        label.text = item.title
-    }
-}
