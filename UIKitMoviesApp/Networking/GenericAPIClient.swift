@@ -24,7 +24,7 @@ extension GenericAPIClient {
             }
             if httpResponse.statusCode == 200 {
                 
-                dump(response)
+               // dump(response)
                 
                 if let data = data {
                     do {

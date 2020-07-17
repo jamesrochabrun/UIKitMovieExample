@@ -9,76 +9,71 @@ import UIKit
 import Combine
 import SwiftUI
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, UISearchBarDelegate, RemoveThis {
     
-    @ObservedObject private var client = MovieModel()
+//    @ObservedObject private var client = MovieModel()
     
+     private var client = MovieModel()
+
     lazy var filteredList: FilteredList<Movie, String, MovieCell>! = nil
+    
+    @State var searchPhrase = ""
+    
+    private let searchController = UISearchController(searchResultsController: nil)
+
+    private func setUpSearchBar() {
+          
+          navigationItem.searchController = searchController
+          navigationItem.hidesSearchBarWhenScrolling = false
+         // searchController.dimsBackgroundDuringPresentation = false
+          searchController.searchBar.delegate = self
+      }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setUpSearchBar()
+        client.delegate = self
         // Do any additional setup after loading the view.
+    }
     
-//        client.getFeed(from: .nowPlaying) { result in
-//            switch result {
-//            case .success(let movieFeedResult):
-//                guard let movieResults = movieFeedResult?.results else { return }
-//
-//                self.filteredList = FilteredList(movieResults,
-//                                                 filterBy: \.title,
-//                                                 isIncluded: { query in
-//                                                    return true
-//                                                 },
-//                                                 rowContent: { movieCell, movie in
-//                                                    movieCell.item = movie
-//                                                    return movieCell
-//                                                 })
-//
-//
-//
-//                self.view.addSubview(self.filteredList)
-//                self.filteredList.translatesAutoresizingMaskIntoConstraints = false
-//
-//                self.filteredList.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
-//                self.filteredList.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
-//                self.filteredList.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
-//                self.filteredList.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
-//
-//
-//               // dump(movieResults)
-//            case .failure(let error):
-//                print("the error \(error)")
-//            }
-//        }
-
-        
-        // print("movies \($client.movies)")
-        
-
-        
-        let filteredList = FilteredList(MovieCell.self,
-                                        [Movie.emptyMovie],
-                             filterBy: \.title,
-                             isIncluded: { query in
-                                return true
-                             },
-                             rowContent: { cell, movie in
-//                                let movieCell: MovieCell = tableView.dequeueReusableCell(forIndexPath: indexPath)
-                                cell.item = movie
-                                return cell
-                             })
-    
+    func update(_ movies: [Movie]) {
+        self.filteredList = FilteredList(movies,
+                                         filterBy: \.title,
+                                         rowContent: { tv, movie, indexPath in
+                                            tv.register(MovieCell.self)
+                                            let movieCell: MovieCell = tv.dequeueReusableCell(forIndexPath: indexPath)
+                                            movieCell.item = movie
+                                            return movieCell
+                                         })
         arrangeFilteredList(filteredList)
     }
     
-    func arrangeFilteredList(_ filteredList: FilteredList<Movie, String, GenericCell<Movie>>) {
+    func arrangeFilteredList(_ filteredList: FilteredList<Movie, String, MovieCell>) {
         view.addSubview(filteredList)
         filteredList.translatesAutoresizingMaskIntoConstraints = false
         
-        filteredList.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
+        filteredList.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor).isActive = true
         filteredList.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
         filteredList.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
         filteredList.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+
+
+        
+        
+        
+        
+        let filteredList: FilteredList<Movie, String, MovieCell> = FilteredList(client.items,
+                                        filterBy: \.title,
+                                        rowContent: { tv, movie, indexPath in
+                                            let movieCell: MovieCell = tv.dequeueReusableCell(forIndexPath: indexPath)
+                                            movieCell.item = movie
+                                            return movieCell
+                                        })
+        
+        arrangeFilteredList(filteredList)
     }
 }
 

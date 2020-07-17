@@ -9,16 +9,16 @@ import UIKit
 
 
 final class FilteredList<Element, FilterKey, RowContent>: UIView
-    where Element: Searchable, RowContent: GenericCell<Element> {
+    where RowContent: GenericCell<Element> {
     
-    // typealias RowContentProvider = (UITableView, Element, IndexPath) -> RowContent
-    typealias RowContentProvider = (RowContent, Element) -> RowContent
+    typealias RowContentProvider = (UITableView, Element, IndexPath) -> RowContent
 
     let tableView: UITableView = {
         let tableView = UITableView()
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.backgroundColor = nil
         tableView.backgroundView = nil
+        tableView.register(RowContent.self)
         tableView.separatorStyle = .none
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 100
@@ -26,24 +26,21 @@ final class FilteredList<Element, FilterKey, RowContent>: UIView
     }()
     
     private var filterKey: KeyPath<Element, FilterKey>?
-    private var isIncluded: ((FilterKey) -> Bool)?
+    var isIncluded: ((FilterKey) -> Bool)?
     private var rowContent: RowContentProvider?
     
-    convenience init<T: UITableViewCell>(_ type: T.Type,
+    convenience init(
         _ items: [Element],
         filterBy key: KeyPath<Element, FilterKey>,
-        isIncluded: @escaping (FilterKey) -> Bool,
         rowContent: @escaping RowContentProvider
     ) {
         self.init(frame: .zero)
-        self.tableView.register(type)
         self.filterKey = key
-        self.isIncluded = isIncluded
         self.rowContent = rowContent
         self.setupDataSource(items, rowContent: rowContent)
     }
     
-    private var dataSource: GenericDataSource<RowContent, Element>?
+    private var dataSource: GenericDataSource<RowContent, FilterKey, Element>?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -65,9 +62,11 @@ final class FilteredList<Element, FilterKey, RowContent>: UIView
     
     private func setupDataSource(_ items: [Element],
                                  rowContent: @escaping RowContentProvider) {
-        
-        dataSource = GenericDataSource(models: items, configureCell: rowContent)
+        dataSource = GenericDataSource(models: items,
+                                       filterBy: self.filterKey!,
+                                       isIncluded: self.isIncluded!,
+                                       configureCell: rowContent)
         tableView.dataSource = dataSource
-        tableView.reloadData()
+        tableView.reloadData()        
     }
 }

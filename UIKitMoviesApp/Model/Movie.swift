@@ -26,6 +26,6 @@ struct Movie: Decodable, Identifiable {
     let release_date: String?
 }
 
-extension Movie: Searchable {
-    var query: String { title }
-}
+//extension Movie: Searchable {
+//    var query: String { title }
+//}

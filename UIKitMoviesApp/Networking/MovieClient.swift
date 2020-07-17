@@ -33,10 +33,15 @@ class MovieClient: GenericAPIClient, ObservableObject {
     }
 }
 
+
+protocol RemoveThis: AnyObject {
+    func update(_ movies: [Movie])
+}
 final class MovieModel: ObservableObject {
     
     private let client = MovieClient()
     
+    weak var delegate: RemoveThis?
     @Published var items: [Movie] = []
     
     init() {
@@ -45,7 +50,9 @@ final class MovieModel: ObservableObject {
             case .success(let movieFeedResult):
                 guard let movieResults = movieFeedResult?.results else { return }
                 self.items = movieResults
-                dump(movieResults)
+                self.delegate?.update(self.items)
+              //  dump(movieResults)
+                print("step 2")
             case .failure(let error):
                 print("the error \(error)")
             }
